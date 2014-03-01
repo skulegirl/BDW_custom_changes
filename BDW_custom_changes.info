@@ -1,0 +1,5 @@
+name = BDW_custom_changes
+description = a collection of custom APIs and changes needed for Boondockers Welcome Website. Split up later if it seems worthwhile.
+version = "6.x-dev"
+project = "BDW_custom_changes"
+core = "6.x"

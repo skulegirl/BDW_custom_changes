@@ -1,0 +1,174 @@
+<?php
+/**
+ *  implementation of hook_init to override login page titles
+ */
+
+function BDW_custom_changes_init() {
+
+  $file = drupal_get_path('module', 'node') . '/node.pages.inc';
+  include_once './' . $file;
+
+  // Customize the user login/register/password page titles
+  // Strings match the page titles as set in user_menu() so they are translated
+  if (arg(0) == 'user' && arg(1) == 'register') {
+      drupal_set_title(t('Join Boondockers Welcome'));
+  } elseif (arg(0) == 'user' && arg(1) == 'password') {
+      drupal_set_title(t('Request new password'));
+  } elseif (arg(0) == 'user' && arg(1) == 'login') {
+      drupal_set_title(t('Log in to your Boondockers Welcome Account'));
+  } elseif (arg(0) == 'user' && arg(1) == '') {
+      drupal_set_title(t('Log in to your Boondockers Welcome Account'));
+  } elseif (arg(0) == 'user' && arg(2) == 'profile' && arg(3) == 'affiliate_info') {
+      drupal_set_title(t('Become an Affiliate'));
+  }
+}
+
+function BDW_custom_changes_my_affiliate_center() {
+  global $user;
+  drupal_goto('user/'.$user->uid.'/affiliate');
+}
+
+function BDW_custom_changes_become_an_affiliate() {
+  global $user;
+  drupal_goto('user/'.$user->uid.'/profile/affiliate_info');
+}
+
+/**
+  * implementation of hook_menu_alter to override the user edit tab 
+  * Change the title to "Account Info"
+  * Also, hide the Affiliate Information tab if user is not an affiliate
+  */
+
+function BDW_custom_changes_menu_alter(&$items) {
+
+  // Change edit to have "Account Info" for the tab title instead.
+  $userEditTabPath = 'user/%user_category/edit';
+  $items[$userEditTabPath]['title'] = 'Account Info';
+
+  // Hide the affiliate info tab for all users - will try to make
+  // a subtab of affiliate centre instead
+  $affiliate_info_path = 'user/%user/profile/affiliate_info';
+  $items[$affiliate_info_path]['type'] = MENU_CALLBACK;
+
+  // Hide the 'Generate links' tab for affiliates
+  $affiliate_generate_links_path = 'user/%user/affiliate/links';
+  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
+
+  // Add affiliate info as subtab of affiliate center
+  $items['user/%user/affiliate/details'] = array(
+    'title' => 'Affiliate Details',
+    'page callback' => 'content_profile_page_edit',
+    'page arguments' => array('affiliate_info', 1),
+    'access callback' => 'content_profile_page_access',
+    'access arguments' => array('affiliate_info', 1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10
+  );
+
+  $items['user/affilate-center'] = array(
+    'title'     => 'Affiliate center',
+    'description' => 'Go to the affiliate center',
+    'page callback' => 'BDW_custom_changes_my_affiliate_center',
+    'access arguments' => array('act as affiliate'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['user/my-affiliate-center'] = array(
+    'title'     => 'My Affiliate Center',
+    'description' => 'Go to the affiliate center',
+    'page callback' => 'BDW_custom_changes_my_affiliate_center',
+    'access arguments' => array('act as affiliate'),
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'secondary-links',
+  );
+
+  $items['user/become-an-affiliate'] = array(
+    'title' => 'Become an Affiliate',
+    'description' => 'Sell Boondockers Welcome Memberships and Make Money',
+    'page callback' => 'BDW_custom_changes_become_an_affiliate',
+    'access arguments' => array('create affiliate_info content'),
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'secondary-links',
+  );
+
+}
+
+/** 
+ ** Implementation of hook_form_alter to disable preview buttons on 
+ **  user_recommendation nodes. 
+ ** Also add a confirm email address field on contact forms.
+ **/
+function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'user_recommendation_node_form':
+    case 'boondocking_available_node_form':
+    	unset($form['buttons']['preview']);
+	    break;
+    case 'contact_mail_page':
+        $form['#validate'][] = 'BDW_custom_email_confirm_validate';
+        break; 
+    case 'user_profile_form':
+    	$form['account']['mail']['#description'] = t('A valid e-mail address. Notifications of messages from other members will be forwarded to this account, so please ensure it is one you check regularly. This e-mail address is not made public to anyone, including other members.'); 
+        break;
+    case 'uc_cart_checkout_form':
+        $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network. <iframe src="https://www.paywithatweet.com/dlbutton01.php?id=a9c2979da2a21b5f4b1497af631fb549" name="paytweet_button" scrolling="no" frameborder="no" height="24px" width="145px" style="padding: 10px; vertical-align:middle"></iframe>');
+        $form['panes']['payment']['payment_method']['#options']['paypal_wps'] = t('Paypal: <img src="https://www.paypal.com/en_US/i/logo/PayPal_mark_37x23.gif" alt="PayPal" class="uc-credit-cctype" />');
+        break;
+    case 'uc_cart_checkout_review_form':
+        $form['submit']['#value'] = t('Pay Now!');
+        break;
+  }
+}
+
+/**
+ ** Implementation of hook_payment_method_alter
+ **/
+
+function BDW_custom_changes_payment_method_alter(&$methods) {
+  foreach ($methods as &$method) {
+    // $method was passed by reference.
+    switch ($method['id']) {
+      case 'paypal_wps':
+      case 'paypal_ec':
+        $method['review'] = t('Paypal, credit or debit');
+	break;
+    }
+  }
+}
+
+/**
+ ** Implementation of hook_checkout_pane_alter
+ ** make panes on checkout page not collapsible
+ */
+
+function BDW_custom_changes_checkout_pane_alter(&$panes) {
+
+  foreach ($panes as &$pane) {
+    $pane['collapsible'] = FALSE;
+  } 
+}
+
+/**
+ ** Implementation of hook_mail_alter to fix the return address being 
+ ** wrong on the site-wide contact auto-reply.
+ **/
+function BDW_custom_changes_mail_alter(&$message) {
+   switch ($message['id']) {
+      case 'contact_page_autoreply':
+         $message['headers']['From'] = $message['from'] = variable_get('site_mail', ini_get('sendmail_from'));
+      break;
+   }
+}
+
+function BDW_custom_email_confirm_validate($form, &$form_state) {
+  if (!($form_state['values']['mail'] == $form_state['values']['field_email_confirmation']))
+  {
+    form_set_error('mail', 'Your email addresses do not match, please check and resubmit');
+    // adding element than removing it per http://drupal.org/node/155695
+    form_set_error('field_email_confirmation', 'Error');
+    array_pop($_SESSION['messages']['error']);
+  }
+}
+
+
+?>

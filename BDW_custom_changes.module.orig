@@ -1,0 +1,82 @@
+<?php
+/**
+ *  implementation of hook_init to override login page titles
+ */
+
+function BDW_custom_changes_init() {
+  // Customize the user login/register/password page titles
+  // Strings match the page titles as set in user_menu() so they are translated
+  if (arg(0) == 'user' && arg(1) == 'register') {
+      drupal_set_title(t('Join Boondockers Welcome'));
+  } elseif (arg(0) == 'user' && arg(1) == 'password') {
+      drupal_set_title(t('Request new password'));
+  } elseif (arg(0) == 'user' && arg(1) == 'login') {
+      drupal_set_title(t('Log in to your Boondockers Welcome Account'));
+  } elseif (arg(0) == 'user' && arg(1) == '') {
+      drupal_set_title(t('Log in to your Boondockers Welcome Account'));
+  }
+}
+
+/**
+  * implementation of hook_menu_alter to override the user edit tab 
+  * Change the title to "Account Info" if there are no other sub-tabs
+  * under the edit path.
+  */
+
+function BDW_custom_changes_menu_alter(&$items) {
+  $userEditTabPath = 'user/%user_category/edit';
+  $userEditTabPathLen = strlen($userEditTabPath);
+
+  foreach ($items as $itemKey => $item)
+  {
+    $pos = strpos($itemKey, $userEditTabPath);
+    if ($pos !== false && strlen($TabKey) > $userEditTabPathLen)
+    {
+      // Then there exists a sub tab, do not change the edit tab name
+      return;
+    }
+  }
+  // If we made it this far, then there is no sub-tabs under $userEditTab 
+  // Change it to have "Account Info" for the tab title instead.
+  $items[$userEditTabPath]['title'] = 'Account Info';
+}
+
+/** 
+ ** Implementation of hook_form_alter to disable preview buttons on 
+ **  user_recommendation nodes. 
+ ** Also add a confirm email address field on contact forms.
+ **/
+function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'user_recommendation_node_form':
+    case 'boondocking_available_node_form':
+	unset($form['buttons']['preview']);
+	break;
+    case 'contact_mail_page':
+        $form['#validate'][] = 'BDW_custom_email_confirm_validate';
+        break; 
+  }
+}
+
+/**
+ ** Implementation of hook_mail_alter to fix the return address being 
+ ** wrong on the site-wide contact auto-reply.
+ **/
+function BDW_custom_changes_mail_alter(&$message) {
+   switch ($message['id']) {
+      case 'contact_page_autoreply':
+         $message['headers']['From'] = $message['from'] = variable_get('site_mail', ini_get('sendmail_from'));
+      break;
+   }
+}
+
+function BDW_custom_email_confirm_validate($form, &$form_state) {
+  if (!($form_state['values']['mail'] == $form_state['values']['field_email_confirmation']))
+  {
+    form_set_error('mail', 'Your email addresses do not match, please check and resubmit');
+    // adding element than removing it per http://drupal.org/node/155695
+    form_set_error('field_email_confirmation', 'Error');
+    array_pop($_SESSION['messages']['error']);
+  }
+}
+?>
