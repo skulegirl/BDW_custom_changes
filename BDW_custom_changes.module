@@ -117,6 +117,13 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
     case 'uc_cart_checkout_review_form':
         $form['submit']['#value'] = t('Pay Now!');
         break;
+    case 'invite_form':
+        $op = $form['#parameters'][2];
+        if ($op == 'page')
+        {
+          $form['#prefix'] = '<div class="instructions">Send emails to your friends through this form inviting them to join Boondockers Welcome. If they register using the email address you send the invite to, both of you will receive an extra month of membership for free!</div>';
+        }
+        break;
   }
 }
 
