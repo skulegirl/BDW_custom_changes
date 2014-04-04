@@ -121,7 +121,11 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
         $op = $form['#parameters'][2];
         if ($op == 'page')
         {
-          $form['#prefix'] = '<div class="instructions">Send emails to your friends through this form inviting them to join Boondockers Welcome. If they register using the email address you send the invite to, both of you will receive an extra month of membership for free!</div>';
+          $form['#prefix'] = '<div class="instructions">Send emails to your friends through this form inviting them to join Boondockers Welcome. If they register from the link in the email or using the email address you send the invite to, both of you will receive an extra month of membership for free!</div>';
+        }
+        // bind contact_importer to email element
+        if (module_exists('contact_importer')) {
+          contact_importer_bind_to_form($form, 'email');
         }
         break;
   }
