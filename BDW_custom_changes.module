@@ -40,14 +40,22 @@ function BDW_custom_changes_become_an_affiliate() {
   */
 
 function BDW_custom_changes_menu_alter(&$items) {
-
   // Change edit to have "Account Info" for the tab title instead.
-  $userEditTabPath = 'user/%user_category/edit';
+  $profile_edit_path = 'user/%user_category/edit/profile';
+  $items[$profile_edit_path]['tab_parent'] = 'user/%';
+  $items[$profile_edit_path]['weight'] = 0;
+
+  $bda_edit_path = 'user/%user_category/edit/boondocking_available';
+  $items[$bda_edit_path]['tab_parent'] = 'user/%';
+  $items[$bda_edit_path]['weight'] = 1;
+
+  $userEditTabPath = 'user/%user/edit';
   $items[$userEditTabPath]['title'] = 'Account Info';
+  $items[$userEditTabPath]['weight'] = 2;
 
   // Hide the affiliate info tab for all users - will try to make
   // a subtab of affiliate centre instead
-  $affiliate_info_path = 'user/%user/profile/affiliate_info';
+  $affiliate_info_path = 'user/%user_category/edit/affiliate_info';
   $items[$affiliate_info_path]['type'] = MENU_CALLBACK;
 
   // Hide the 'Generate links' tab for affiliates
@@ -90,7 +98,6 @@ function BDW_custom_changes_menu_alter(&$items) {
     'type' => MENU_NORMAL_ITEM,
     'menu_name' => 'secondary-links',
   );
-
 }
 
 /** 
@@ -102,32 +109,33 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
     case 'user_recommendation_node_form':
     case 'boondocking_available_node_form':
-    	unset($form['buttons']['preview']);
-	    break;
-    case 'contact_mail_page':
+	unset($form['buttons']['preview']);
+	break;
+    case 'contact_site_form':
+        $form['name']['#weight'] = -10;
+        $form['mail']['#weight'] = -5;
+        $form['field_email_confirmation'] = array(
+          '#type' => 'textfield',
+          '#title' => 'Confirm your e-mail address',
+          '#size' => 60,
+          '#weight' => 0,
+          '#maxlength' => 255,
+          '#required' => TRUE,
+        );
+        $form['subject']['#weight'] = 5;
+        $form['cid']['#weight'] = 10;
+        $form['message']['#weight'] = 100;
+        $form['copy']['#weight'] = 101;
+        $form['actions']['#weight'] = 200;
         $form['#validate'][] = 'BDW_custom_email_confirm_validate';
         break; 
     case 'user_profile_form':
-    	$form['account']['mail']['#description'] = t('A valid e-mail address. Notifications of messages from other members will be forwarded to this account, so please ensure it is one you check regularly. This e-mail address is not made public to anyone, including other members.'); 
+    	$form['account']['mail']['#description'] = t('A valid e-mail address. Notifications of messages from other members will be forwarded to this account, so please ensure it is one you check regularly. This e-mail address is not made public to anyone, including other members.');
         break;
     case 'uc_cart_checkout_form':
-        $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network. <iframe src="https://www.paywithatweet.com/dlbutton01.php?id=a9c2979da2a21b5f4b1497af631fb549" name="paytweet_button" scrolling="no" frameborder="no" height="24px" width="145px" style="padding: 10px; vertical-align:middle"></iframe>');
-        $form['panes']['payment']['payment_method']['#options']['paypal_wps'] = t('Paypal: <img src="https://www.paypal.com/en_US/i/logo/PayPal_mark_37x23.gif" alt="PayPal" class="uc-credit-cctype" />');
+        $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<a href="javascript:void(window.open(\'https://www.paywithatweet.com/pay/index.php?id=a9c2979da2a21b5f4b1497af631fb549\',\'\',\'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=810,height=490\'))"><img src="http://www.paywithatweet.com/pics/pay_button2.gif" border="0" title="Get a coupon if you pay with a Tweet!" alt="Get a coupon if you pay with a Tweet!" style="padding: 10px; vertical-align:middle"/></a>');
         break;
-    case 'uc_cart_checkout_review_form':
-        $form['submit']['#value'] = t('Pay Now!');
-        break;
-    case 'invite_form':
-        $op = $form['#parameters'][2];
-        if ($op == 'page')
-        {
-          $form['#prefix'] = '<div class="instructions">Send emails to your friends through this form inviting them to join Boondockers Welcome. If they register from the link in the email or using the email address you send the invite to, both of you will receive an extra month of membership for free!<p>(Invitations expire after 60 days, but can always be resent.)</div>';
-        }
-        // bind contact_importer to email element
-        if (module_exists('contact_importer')) {
-          contact_importer_bind_to_form($form, 'email');
-        }
-        break;
+
   }
 }
 
@@ -181,5 +189,38 @@ function BDW_custom_email_confirm_validate($form, &$form_state) {
   }
 }
 
+function BDW_custom_changes_location_element_alter(&$element)
+{
+  $element['city']['#title'] = 'Nearest City/Town';
+}
 
-?>
+/**
+ * Implement hook_rules_condition_info()
+ */
+
+function BDW_custom_changes_rules_condition_info()
+{
+  return array(
+    'BDW_custom_changes_rules_condition_first_login' => array(
+      'group' => 'user',
+      'label' => t('User is logging in for the first time'),
+      'module' => 'BDW_custom_changes',
+    ),
+  );
+}
+
+function BDW_custom_changes_rules_condition_first_login()
+{
+  return $_SESSION['first_login'];
+}
+
+/**
+ * implement hook_user_login()
+ */
+function BDW_custom_changes_user_login(&$edit, $account)
+{
+  if ($account->access == 0)
+  {
+    $_SESSION['first_login'] = true;
+  }
+}

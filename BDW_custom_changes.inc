@@ -9,9 +9,9 @@
 function BDW_custom_changes_FileHasBeenDownloaded ($filename) {
   global $user;
 
-  $result = db_query("SELECT COUNT(dc.dcid) AS count FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE f.filename = '%s' AND dc.uid = %d", $filename, $user->uid);
+  $result = db_query('SELECT COUNT(dc.dcid) AS count FROM {download_count} dc JOIN {files} f ON dc.fid = f.fid WHERE f.filename = :filename AND dc.uid = :uid', array(':filename' => $filename, ':uid' => $user->uid));
 
-  while ($download = db_fetch_object($result)) {
+  foreach ($result as $download) {
     $count = $download->count;
     break;
   }
@@ -37,8 +37,8 @@ function BDW_custom_changes_GetAvailableUnacquiredFiles () {
 
 // NOTE - this complicated logic and the GetAvailableFiles function should just be replaced with an JOIN.
 
-  $file_downloads = db_query("SELECT * FROM {uc_file_users} AS ufu INNER JOIN {uc_files} AS uf ON ufu.fid = uf.fid WHERE ufu.uid = %d ORDER BY uf.filename ASC", $user->uid);
-  while ($file_download = db_fetch_object($file_downloads)) {
+  $file_downloads = db_query('SELECT * FROM {uc_file_users} AS ufu INNER JOIN {uc_files} AS uf ON ufu.fid = uf.fid WHERE ufu.uid = :uid ORDER BY uf.filename ASC', array(':uid' =>$user->uid));
+  foreach ($file_downloads as $file_download) {
     foreach ($files as &$file) {
       if (strcmp($file['filename'], $file_download->filename) == 0)
       {
@@ -59,8 +59,8 @@ function BDW_custom_changes_GetFilesForDownload()
   global $user;
 
   $files=array();
-  $file_downloads = db_query("SELECT * FROM {uc_file_users} AS ufu INNER JOIN {uc_files} AS uf ON ufu.fid = uf.fid INNER JOIN uc_file_products as p ON p.pfid = ufu.pfid WHERE ufu.uid = %d ORDER BY uf.filename ASC", $user->uid);
-  while ($file_download = db_fetch_object($file_downloads)) {
+  $file_downloads = db_query('SELECT * FROM {uc_file_users} AS ufu INNER JOIN {uc_files} AS uf ON ufu.fid = uf.fid INNER JOIN uc_file_products as p ON p.pfid = ufu.pfid WHERE ufu.uid = :uid ORDER BY uf.filename ASC', array(':uid' =>$user->uid));
+  foreach ($file_downloads as $file_download) {
        $files[] = array( 'filename' => $file_download->filename,
        			 'fid' => $file_download->fid,
 			 'file_key' => $file_download->file_key,
@@ -93,7 +93,6 @@ function BDW_custoom_changes_GetAvailableFiles()
  **/
 function BDW_custom_changes_GetBDACount()
 {
-  return db_result(db_query("SELECT COUNT(*) FROM {flag_content} INNER JOIN {users} ON flag_content.content_id=users.uid WHERE flag_content.fid = 2 AND flag_content.uid = 0"));
+  return db_query("SELECT COUNT(*) FROM {flagging} INNER JOIN {users} ON flagging.entity_id=users.uid WHERE flagging.fid = 2 AND flagging.uid = 0")->fetchField();
 }
 
-?>
