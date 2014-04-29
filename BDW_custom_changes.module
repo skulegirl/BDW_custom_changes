@@ -135,7 +135,11 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
     case 'uc_cart_checkout_form':
         $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<a href="javascript:void(window.open(\'https://www.paywithatweet.com/pay/index.php?id=a9c2979da2a21b5f4b1497af631fb549\',\'\',\'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=810,height=490\'))"><img src="http://www.paywithatweet.com/pics/pay_button2.gif" border="0" title="Get a coupon if you pay with a Tweet!" alt="Get a coupon if you pay with a Tweet!" style="padding: 10px; vertical-align:middle"/></a>');
         break;
+  }
 
+  if (strpos($form_id, 'uc_product_add_to_cart_form') !== false)
+  {
+    $form['actions']['submit']['#value'] = t('Sign Me Up!');
   }
 }
 
