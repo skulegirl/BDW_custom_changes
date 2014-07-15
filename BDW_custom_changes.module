@@ -26,12 +26,27 @@ function BDW_custom_changes_init() {
 function BDW_custom_changes_my_affiliate_center() {
   global $user;
   drupal_goto('user/'.$user->uid.'/affiliate');
+  
 }
 
 function BDW_custom_changes_become_an_affiliate() {
   global $user;
-  drupal_goto('user/'.$user->uid.'/profile/affiliate_info');
+  if ($user->uid)
+  {
+    drupal_goto('user/'.$user->uid.'/edit/affiliate_info');
+  }
+  else
+  {
+    drupal_goto('become-an-affiliate/register');
+  }
 }
+
+function BDW_custom_changes_become_an_affiliate_access() {
+  global $user;
+  // only access if user is not already an affiliate
+  return !in_array('affiliate', $user->roles);
+}
+
 
 /**
   * implementation of hook_menu_alter to override the user edit tab 
@@ -53,27 +68,19 @@ function BDW_custom_changes_menu_alter(&$items) {
   $items[$userEditTabPath]['title'] = 'Account Info';
   $items[$userEditTabPath]['weight'] = 2;
 
-  // Hide the affiliate info tab for all users - will try to make
-  // a subtab of affiliate centre instead
+  // Move the affiliate info tab to be a subtab of affiliate centre instead
   $affiliate_info_path = 'user/%user_category/edit/affiliate_info';
-  $items[$affiliate_info_path]['type'] = MENU_CALLBACK;
+  $items[$affiliate_info_path]['tab_parent'] = 'user/%';
+  $items[$affiliate_info_path]['weight'] = -1;
+  //unset($items[$affiliate_info_path]);
+  
 
   // Hide the 'Generate links' tab for affiliates
-  $affiliate_generate_links_path = 'user/%user/affiliate/links';
-  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
+//  $affiliate_generate_links_path = 'user/%user/affiliate/links';
+//  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
 
-  // Add affiliate info as subtab of affiliate center
-  $items['user/%user/affiliate/details'] = array(
-    'title' => 'Affiliate Details',
-    'page callback' => 'content_profile_page_edit',
-    'page arguments' => array('affiliate_info', 1),
-    'access callback' => 'content_profile_page_access',
-    'access arguments' => array('affiliate_info', 1),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10
-  );
 
-  $items['user/affilate-center'] = array(
+  $items['affilate-center'] = array(
     'title'     => 'Affiliate center',
     'description' => 'Go to the affiliate center',
     'page callback' => 'BDW_custom_changes_my_affiliate_center',
@@ -81,22 +88,22 @@ function BDW_custom_changes_menu_alter(&$items) {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items['user/my-affiliate-center'] = array(
+  $items['my-affiliate-center'] = array(
     'title'     => 'My Affiliate Center',
     'description' => 'Go to the affiliate center',
     'page callback' => 'BDW_custom_changes_my_affiliate_center',
     'access arguments' => array('act as affiliate'),
     'type' => MENU_NORMAL_ITEM,
-    'menu_name' => 'secondary-links',
+    'menu_name' => 'secondary-menu',
   );
 
-  $items['user/become-an-affiliate'] = array(
+  $items['become-an-affiliate'] = array(
     'title' => 'Become an Affiliate',
     'description' => 'Sell Boondockers Welcome Memberships and Make Money',
     'page callback' => 'BDW_custom_changes_become_an_affiliate',
-    'access arguments' => array('create affiliate_info content'),
+    'access callback' => 'BDW_custom_changes_become_an_affiliate_access',
     'type' => MENU_NORMAL_ITEM,
-    'menu_name' => 'secondary-links',
+    'menu_name' => 'secondary-menu',
   );
 }
 
@@ -107,34 +114,40 @@ function BDW_custom_changes_menu_alter(&$items) {
  **/
 function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
-    case 'user_recommendation_node_form':
-    case 'boondocking_available_node_form':
-	unset($form['buttons']['preview']);
-	break;
     case 'contact_site_form':
-        $form['name']['#weight'] = -10;
-        $form['mail']['#weight'] = -5;
-        $form['field_email_confirmation'] = array(
-          '#type' => 'textfield',
-          '#title' => 'Confirm your e-mail address',
-          '#size' => 60,
-          '#weight' => 0,
-          '#maxlength' => 255,
-          '#required' => TRUE,
-        );
-        $form['subject']['#weight'] = 5;
-        $form['cid']['#weight'] = 10;
-        $form['message']['#weight'] = 100;
-        $form['copy']['#weight'] = 101;
-        $form['actions']['#weight'] = 200;
-        $form['#validate'][] = 'BDW_custom_email_confirm_validate';
-        break; 
+      $form['name']['#weight'] = -10;
+      $form['mail']['#weight'] = -5;
+      $form['field_email_confirmation'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Confirm your e-mail address',
+        '#size' => 60,
+        '#weight' => 0,
+        '#maxlength' => 255,
+        '#required' => TRUE,
+      );
+      $form['subject']['#weight'] = 5;
+      $form['cid']['#weight'] = 10;
+      $form['message']['#weight'] = 100;
+      $form['copy']['#weight'] = 101;
+      $form['actions']['#weight'] = 200;
+      $form['#validate'][] = 'BDW_custom_email_confirm_validate';
+      break; 
     case 'user_profile_form':
     	$form['account']['mail']['#description'] = t('A valid e-mail address. Notifications of messages from other members will be forwarded to this account, so please ensure it is one you check regularly. This e-mail address is not made public to anyone, including other members.');
-        break;
+      break;
     case 'uc_cart_checkout_form':
-        $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<a href="javascript:void(window.open(\'https://www.paywithatweet.com/pay/index.php?id=a9c2979da2a21b5f4b1497af631fb549\',\'\',\'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=810,height=490\'))"><img src="http://www.paywithatweet.com/pics/pay_button2.gif" border="0" title="Get a coupon if you pay with a Tweet!" alt="Get a coupon if you pay with a Tweet!" style="padding: 10px; vertical-align:middle"/></a>');
-        break;
+      $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<a href="javascript:void(window.open(\'https://www.paywithatweet.com/pay/index.php?id=a9c2979da2a21b5f4b1497af631fb549\',\'\',\'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=810,height=490\'))"><img src="http://www.paywithatweet.com/pics/pay_button2.gif" border="0" title="Get a coupon if you pay with a Tweet!" alt="Get a coupon if you pay with a Tweet!" style="padding: 10px; vertical-align:middle"/></a>');
+      $form['panes']['customer']['#description'] = t('Enter a valid email address for your account. All messages from other members will be forwarded to this address, so be sure to choose an account you check regularly.');
+      $form['panes']['payment']['details']['#markup'] = t('Click "Review order" below to continue');
+      break;
+    case 'user_recommendation_node_form':
+    	unset($form['actions']['preview']);
+      $uid = arg(3);
+      if (user_load($uid))
+      {
+          $form['field_ur_fellow_boondocker']['und'][0]['uid']['#default_value'] = $uid;
+      }
+      break;
   }
 
   if (strpos($form_id, 'uc_product_add_to_cart_form') !== false)
@@ -227,4 +240,49 @@ function BDW_custom_changes_user_login(&$edit, $account)
   {
     $_SESSION['first_login'] = true;
   }
+}
+
+/**
+ * Implement hook_form_profile2_form_alter
+ * Remove the text format fields from the profile2 forms
+ */
+
+function BDW_custom_changes_form_profile2_form_alter(&$form, &$form_state)
+{
+  if (!user_access('view hidden fields')) {
+    // Hide the text format selection 
+    $js = 'jQuery(document).ready(function($) {
+      $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
+    });';
+    drupal_add_js($js, 'inline');
+  }
+}
+
+/**
+ * Implement hook_form_profile2_edit_PROFILE_TYPE_form_alter
+ */
+function BDW_custom_changes_form_profile2_edit_boondocking_available_form_alter(&$form, &$form_state) {
+  $bda_current_loc_info = $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#default_value'];
+  if (isset ($bda_current_loc_info) && 
+      ($bda_current_loc_info['lid'] == 0 || (
+       $bda_current_loc_info['latitude'] == 0 && $bda_current_loc_info['longitude'] == 0))) {
+    $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'] = "<div class='loc-error'>Your location is currently invalid. Plesae enter a valid location.</div>" . $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'];
+  }
+}
+
+function BDW_custom_changes_field_widget_form_alter(&$element, &$form_state, $context)
+{
+  if ($context['field']['type'] == 'image')
+  {
+    foreach (element_children($element) as $key => $child)
+    {
+      $element[$key]['#process'][] = 'BDW_custom_changes_image_field_widget_preprocess';
+    }
+  }
+}
+
+function BDW_custom_changes_image_field_widget_preprocess($element, &$form_state, $form) 
+{
+  $element['title']['#description'] = t('Enter a descriptive title for the image (optional).');
+  return $element;
 }
