@@ -105,6 +105,9 @@ function BDW_custom_changes_menu_alter(&$items) {
     'type' => MENU_NORMAL_ITEM,
     'menu_name' => 'secondary-menu',
   );
+
+  // Make the new messages link a tab in the message centre instead of a link from the message list.
+  $items['messages/new']['type'] = MENU_LOCAL_TASK;
 }
 
 /** 
@@ -115,6 +118,7 @@ function BDW_custom_changes_menu_alter(&$items) {
 function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
     case 'contact_site_form':
+      $form['contact_information']['#weight'] = -15;
       $form['name']['#weight'] = -10;
       $form['mail']['#weight'] = -5;
       $form['field_email_confirmation'] = array(
@@ -124,7 +128,7 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
         '#weight' => 0,
         '#maxlength' => 255,
         '#required' => TRUE,
-      );
+      ); 
       $form['subject']['#weight'] = 5;
       $form['cid']['#weight'] = 10;
       $form['message']['#weight'] = 100;
@@ -147,6 +151,9 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       {
           $form['field_ur_fellow_boondocker']['und'][0]['uid']['#default_value'] = $uid;
       }
+      break;
+    case 'password_hustle_user_pass_reset':
+      $form['pass']['#title'] = t('You are using a password reset link. Please change your password to something memorable for easier logins in the future.');
       break;
   }
 
@@ -286,3 +293,4 @@ function BDW_custom_changes_image_field_widget_preprocess($element, &$form_state
   $element['title']['#description'] = t('Enter a descriptive title for the image (optional).');
   return $element;
 }
+

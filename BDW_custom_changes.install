@@ -1,0 +1,17 @@
+<?php
+
+function BDW_custom_changes_install() {
+  // need to have weight more than contact_forms
+  $contact_forms_weight = db_select('system', 's')
+    ->fields('s', array('weight'))
+    ->condition('name', 'contact_forms', '=')
+    ->execute()
+    ->fetchField();
+  $good_weight = $contact_forms_weight + 1;
+  db_update('system')
+    ->fields(array('weight' => $good_weight))
+    ->condition('name', 'BDW_custom_changes', '=')
+    ->execute();
+}
+
+
