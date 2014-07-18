@@ -31,6 +31,7 @@ function BDW_custom_changes_my_affiliate_center() {
 
 function BDW_custom_changes_become_an_affiliate() {
   global $user;
+  dd($user);
   if ($user->uid)
   {
     drupal_goto('user/'.$user->uid.'/edit/affiliate_info');
@@ -68,18 +69,6 @@ function BDW_custom_changes_menu_alter(&$items) {
   $items[$userEditTabPath]['title'] = 'Account Info';
   $items[$userEditTabPath]['weight'] = 2;
 
-  // Move the affiliate info tab to be a subtab of affiliate centre instead
-  $affiliate_info_path = 'user/%user_category/edit/affiliate_info';
-  $items[$affiliate_info_path]['tab_parent'] = 'user/%';
-  $items[$affiliate_info_path]['weight'] = -1;
-  //unset($items[$affiliate_info_path]);
-  
-
-  // Hide the 'Generate links' tab for affiliates
-//  $affiliate_generate_links_path = 'user/%user/affiliate/links';
-//  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
-
-
   $items['affilate-center'] = array(
     'title'     => 'Affiliate center',
     'description' => 'Go to the affiliate center',
@@ -87,6 +76,18 @@ function BDW_custom_changes_menu_alter(&$items) {
     'access arguments' => array('act as affiliate'),
     'type' => MENU_NORMAL_ITEM,
   );
+
+  // Move the affiliate info tab to be a subtab of affiliate centre instead
+  $affiliate_info_path = 'user/%user_category/edit/affiliate_info';
+  $items[$affiliate_info_path]['tab_parent'] = 'user/%/affiliate';
+  $items[$affiliate_info_path]['weight'] = -1;
+//  unset($items[$affiliate_info_path]);
+  
+  // Hide the 'Generate links' tab for affiliates
+//  $affiliate_generate_links_path = 'user/%user/affiliate/links';
+//  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
+
+
 
   $items['my-affiliate-center'] = array(
     'title'     => 'My Affiliate Center',
