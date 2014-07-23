@@ -31,7 +31,6 @@ function BDW_custom_changes_my_affiliate_center() {
 
 function BDW_custom_changes_become_an_affiliate() {
   global $user;
-  dd($user);
   if ($user->uid)
   {
     drupal_goto('user/'.$user->uid.'/edit/affiliate_info');
@@ -81,12 +80,10 @@ function BDW_custom_changes_menu_alter(&$items) {
   $affiliate_info_path = 'user/%user_category/edit/affiliate_info';
   $items[$affiliate_info_path]['tab_parent'] = 'user/%/affiliate';
   $items[$affiliate_info_path]['weight'] = -1;
-//  unset($items[$affiliate_info_path]);
   
   // Hide the 'Generate links' tab for affiliates
 //  $affiliate_generate_links_path = 'user/%user/affiliate/links';
 //  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
-
 
 
   $items['my-affiliate-center'] = array(
@@ -109,6 +106,11 @@ function BDW_custom_changes_menu_alter(&$items) {
 
   // Make the new messages link a tab in the message centre instead of a link from the message list.
   $items['messages/new']['type'] = MENU_LOCAL_TASK;
+
+  // hide the Boondocker Points tab for users
+  $items['user/%user/points']['type'] = MENU_CALLBACK;
+
+  $itesm['invite']['menu_name'] = 'navigation';
 }
 
 /** 
@@ -144,7 +146,10 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<iframe src="https://www.paywithatweet.com/dlbutton01.php?id=a9c2979da2a21b5f4b1497af631fb549" name="paytweet_button" scrolling="no" frameborder="no" height="24px" width="145px" style="padding: 10px; vertical-align:middle"></iframe>');
       $form['panes']['customer']['#description'] = t('Enter a valid email address for your account. All messages from other members will be forwarded to this address, so be sure to choose an account you check regularly.');
       $form['panes']['payment']['details']['#markup'] = t('Click "Review order" below to continue');
-      $form['panes']['payment']['payment_method']['#options']['paypal_wps'] = t('Paypal: <img src="https://www.paypal.com/en_US/i/logo/PayPal_mark_37x23.gif" alt="PayPal" class="uc-credit-cctype" />');
+      if(isset($form['panes']['payment']['payment_method']['#options']['paypal_wps']))
+      {
+        $form['panes']['payment']['payment_method']['#options']['paypal_wps'] = t('Paypal: <img src="https://www.paypal.com/en_US/i/logo/PayPal_mark_37x23.gif" alt="PayPal" class="uc-credit-cctype" />');
+      }
       break;
     case 'user_recommendation_node_form':
     	unset($form['actions']['preview']);
@@ -156,6 +161,10 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'password_hustle_user_pass_reset':
       $form['pass']['#title'] = t('You are using a password reset link. Please change your password to something memorable for easier logins in the future.');
+      break;
+    case 'invite_form':
+      // hide the silly "show registration link" button on the invite form
+      unset($form['submit_show']);
       break;
   }
 
@@ -237,7 +246,7 @@ function BDW_custom_changes_rules_condition_info()
 
 function BDW_custom_changes_rules_condition_first_login()
 {
-  return $_SESSION['first_login'];
+  return isset($_SESSION['first_login']) ? TRUE : FALSE;
 }
 
 /**
