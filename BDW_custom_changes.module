@@ -110,7 +110,7 @@ function BDW_custom_changes_menu_alter(&$items) {
   // hide the Boondocker Points tab for users
   $items['user/%user/points']['type'] = MENU_CALLBACK;
 
-  $itesm['invite']['menu_name'] = 'navigation';
+  $items['user/%user/invites']['weight'] = 50;
 }
 
 /** 
