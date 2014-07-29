@@ -134,7 +134,7 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       ); 
       $form['subject']['#weight'] = 5;
       $form['cid']['#weight'] = 10;
-      $form['message']['#weight'] = 100;
+      $form['message']['#weight'] = 15;
       $form['copy']['#weight'] = 101;
       $form['actions']['#weight'] = 200;
       $form['#validate'][] = 'BDW_custom_email_confirm_validate';
