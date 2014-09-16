@@ -102,7 +102,7 @@ function BDW_custom_changes_menu_alter(&$items) {
     'access callback' => 'BDW_custom_changes_become_an_affiliate_access',
     'type' => MENU_NORMAL_ITEM,
     'menu_name' => 'secondary-menu',
-  );
+  ); 
 
   // Make the new messages link a tab in the message centre instead of a link from the message list.
   $items['messages/new']['type'] = MENU_LOCAL_TASK;
@@ -111,6 +111,9 @@ function BDW_custom_changes_menu_alter(&$items) {
   $items['user/%user/points']['type'] = MENU_CALLBACK;
 
   $items['user/%user/invites']['weight'] = 50;
+
+  // remove the shopping cart from the menu
+  unset($items['cart']);
 }
 
 /** 
