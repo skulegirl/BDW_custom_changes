@@ -305,3 +305,22 @@ function BDW_custom_changes_image_field_widget_preprocess($element, &$form_state
   return $element;
 }
 
+function BDW_custom_changes_uc_product_alter(&$node) {
+  global $user;
+  if(preg_match('/^.*-renewal$/i', $node->model))
+  {
+    $aid = 3; //subscription length attribute
+    $attr = $node->attributes[$aid];
+    foreach ($node->attributes[$aid]->options as &$option)
+    {
+      if ($option->name == "1 Year") 
+      {
+        $option->name = "1 Year + 1 month free";
+      }
+      elseif ($option->name == "3 Years")
+      {
+        $option->name = "3 Years + 3 months free";
+      }
+    } 
+  } 
+}
