@@ -96,3 +96,234 @@ function BDW_custom_changes_GetBDACount()
   return db_query("SELECT COUNT(*) FROM {flagging} INNER JOIN {users} ON flagging.entity_id=users.uid WHERE flagging.fid = 2 AND flagging.uid = 0")->fetchField();
 }
 
+
+function _BDW_get_services_icon($image, $alttext, $active = TRUE, $disptext = NULL, $class = NULL, $legend = FALSE)
+{
+  $output = "<div class='ServiceIcon";
+  if (isset($class))
+  {
+    $output .= " $class";
+  }
+  if (!$active)
+  {
+    $output .= " NotAvailable";
+    $alttext = "No " . $alttext;
+  }
+  $output .= "'>";
+  $output .= "<span title='$alttext'>";
+  $output .= "<img src='$image' alt='$alttext'/>";
+  if (isset($disptext))
+  {
+    $output .= "<h3>$disptext</h3>";
+  }
+  $output .= "</span>";
+  if ($legend) { $output .= "<span class='LegendText'>$alttext</span>"; }
+  $output .= "</div>";
+  
+  return $output;
+}
+
+function _BDW_site_provides($vars)
+{
+  $basepath = '/sites/boondockerswelcome.com/files/media/iconsets/services/';
+
+  $services = FALSE;
+  $output = "<div class='SiteProvides'>";
+
+  $active = FALSE;
+  if ($vars->field_ba_pullthrough_spot['und'][0]['value'] === "Yes") {
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'pull-through-parking-icon.png', 'Pull Through Parking Available', $active);
+
+  $active = FALSE;
+  if ($vars->field_ba_wifi_available['und'][0]['value'] === "Yes") {
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'wifi-icon.png', 'Wifi Available', $active);
+
+
+  if(isset($vars->field_ba_hookups))
+  {
+    foreach ($vars->field_ba_hookups['und'] as $hookup)
+    {
+      switch ($hookup['value']) {
+        case 'Electric Hookup Available': 
+          $electric = TRUE;
+          $services = TRUE;
+          break;
+        case 'Water Hookup Available':
+          $water = TRUE;
+          $services = TRUE;
+          break;
+        case 'Dump Available':
+          $dump = TRUE;
+          $services = TRUE;
+          break;
+      }
+    }
+  }
+
+  $output .= _BDW_get_services_icon($basepath . 'power-icon.png', 'Electric Hookup Available', $electric);
+  $output .= _BDW_get_services_icon($basepath . 'water-icon.png', 'Water Hookup Available', $water);
+  $output .= _BDW_get_services_icon($basepath . 'rv-dump-icon.png', 'Dump Available', $dump);
+
+  if ($services === FALSE)
+  {
+    $output .= "<h2 class='NoServices'>No Services Provided</h2>";
+  }
+  $output .= "</div>";
+  return $output;
+}
+
+
+function _BDW_site_welcomes($vars) 
+{
+  $basepath = '/sites/boondockerswelcome.com/files/media/iconsets/services/';
+
+  $services = FALSE;
+  $output = "<div class='SiteWelcomes'>";
+
+  $active = FALSE;
+  if ($vars->field_ba_slideout_awning['und'][0]['value'] === "Yes") {  
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'slideouts-icon.png', 'Slideouts And Awnings', $active);
+  
+  $active = FALSE;
+  if ($vars->field_generators_allowed['und'][0]['value'] === "Yes") {  
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'generator-icon.png', 'Generators Allowed', $active);
+
+  $active = FALSE;
+  if ($vars->field_lawn_chairs_allowed['und'][0]['value'] === "Yes") {  
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'lawnchairs-icon.png', 'Lawn Chairs Allowed', $active);
+  
+  $active = FALSE;
+  if ($vars->field_barbecues_allowed['und'][0]['value'] === "Yes") {  
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'bbq-icon.png', 'BBQs Allowed', $active);
+
+  $active = FALSE;
+  if ($vars->field_ba_pets_welcome['und'][0]['value'] === "Yes") {  
+    $active = TRUE;
+    $services = TRUE;
+  }
+  $output .= _BDW_get_services_icon($basepath . 'pets-icon.png', 'Pets Welcome', $active);
+
+
+  if ($services === FALSE)
+  {
+    $output .= "<h2 class='NoServices'>Stealth Mode Please!</h2>";
+  }
+  $output .= "</div>";
+  return $output;
+}
+
+function BDW_echo_BDA_services($data)
+{
+  echo "<div class='SiteServices'>";
+  $output = _BDW_site_provides($data->_field_data['pid']['entity']);
+  echo "<h2 class='block-title'>Site Provides:</h2>";
+  echo $output;
+
+  $output = _BDW_site_welcomes($data->_field_data['pid']['entity']);
+  echo "<h2 class='block-title'>Site Welcomes:</h2>";
+  echo $output;
+
+  echo "</div>";
+}
+
+function BDW_echo_BDA_details($data)
+{
+  $basepath = '/sites/boondockerswelcome.com/files/media/iconsets/services/';
+  $vars = $data->_field_data['pid']['entity'];
+
+  echo "<div class='SiteDetails'>";
+  echo "<h2 class='block-title'>Site Details:</h2>";
+
+  /* Number of Spots */
+  $rvcount = $vars->field_ba_number_of_spots['und'][0]['value'];
+  $alttext = "$rvcount spot" . ($rvcount > 1 ? 's' : '') . " available";
+  echo _BDW_get_services_icon($basepath . 'rv-count-icon.png', $alttext, TRUE, $rvcount, 'RVCount');
+
+  /* Max Size */
+  $rvsize = $vars->field_ba_max_rv_length_int['und'][0]['value'];
+  if ($rvsize < 100)
+  {
+    $alttext = "RV $rvsize feet max";
+    $disptext = "&lt ". $rvsize;
+  }
+  else
+  {
+    $alttext = "any size RV"; 
+    $disptext = "40+";
+  }
+  echo _BDW_get_services_icon($basepath . 'rv-size-icon.png', $alttext, TRUE, $disptext, 'RVSize');
+
+  /* Number of Nights */
+  $nightcount = $vars->field_ba_max_nights['und'][0]['value'];
+  echo "<div class='MaxNights ServiceIcon'>";
+  if ($nightcount === "we'll play it by ear")
+  {
+    $alttext = "We&#39;ll play it by ear";
+    $disptext = "?";
+  }
+  else
+  {
+    $alttext = "$nightcount nights max";
+    $disptext = "$nightcount";
+  }
+  echo _BDW_get_services_icon($basepath . 'night-count-icon.png', $alttext, TRUE, $disptext, 'MaxNights');
+
+  echo "</div>";
+}
+
+function _BDW_get_BDA_legend() {
+  $basepath = '/sites/boondockerswelcome.com/files/media/iconsets/services/';
+  $output = '<p class="LegendHeader">If an icon is greyed out, then that service is not available / not allowed</p>';
+
+  $output .= "<div class='SiteDetails SiteServicesLegend'>";
+  $output .= _BDW_get_services_icon($basepath . 'rv-count-icon.png', 'Number of spots', TRUE, '2', 'RVCount LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'night-count-icon.png', 'Maximum Night Stay', TRUE, '1', 'MaxNights LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'rv-size-icon.png', 'Maximum RV Size in Feet', TRUE, '20', 'RVSize LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'pull-through-parking-icon.png', 'Pull Through Parking Available', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'wifi-icon.png', 'Wifi Available', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'power-icon.png', 'Electric Hookup Available', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'water-icon.png', 'Water Hookup Available', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'rv-dump-icon.png', 'Dump Available', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'slideouts-icon.png', 'Slideouts /Awnings Allowed', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'generator-icon.png', 'Generators Allowed', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'lawnchairs-icon.png', 'Lawn Chairs Allowed', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'bbq-icon.png', 'BBQs Allowed', TRUE, NULL, 'LegendIcon', TRUE);
+  $output .= _BDW_get_services_icon($basepath . 'pets-icon.png', 'Pets Welcome', TRUE, NULL, 'LegendIcon', TRUE);
+
+  $output .= "</div>";
+  $output .= "</div>";
+  return $output;
+}
+
+function BDW_echo_BDA_legend()
+{
+  $attributes = array(
+    'text' => _BDW_get_BDA_legend(),
+    'title' => 'Site Icon Legend',
+    'id' => 'legend',
+    'class' => 'legend',
+    'width' => '280',
+    'close' => 'TRUE',
+  );
+  module_load_include('inc', 'popup', 'includes/popup.api');
+  $retval = popup($attributes);
+  echo $retval;
+}
