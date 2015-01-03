@@ -170,11 +170,9 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       unset($form['submit_show']);
       break;
     case 'user_login_block':
-      dd($form['links'], 'links before');
       $items = array();
       $items[] = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password vie e-mail.'))));
       $form['links'] = array('#markup' => theme('item_list', array('items' => $items)));
-      dd($form['links'], 'links after');
       break;
   }
 
