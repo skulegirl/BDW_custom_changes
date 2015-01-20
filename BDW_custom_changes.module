@@ -340,3 +340,12 @@ function BDW_custom_changes_uc_product_alter(&$node) {
 function BDW_custom_changes_form_contact_site_form_alter(&$form, &$form_state) {
   drupal_set_title('Contact Boondockers Welcome');
 }
+
+function BDW_custom_changes_query_alter(QueryAlterableInterface $query) {
+  if ($query->hasTag('node_export_features')) {
+    $query->condition('n.type', array(
+      'page', 
+      'news_and_reminders',
+      'membership_level'));
+  }
+}
