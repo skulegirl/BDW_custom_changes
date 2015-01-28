@@ -173,10 +173,6 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       $items = array();
       $items[] = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password vie e-mail.'))));
       $form['links'] = array('#markup' => theme('item_list', array('items' => $items)));
-      $form['name']['#weight'] = 4;
-      $form['pass']['#weight']= 6;
-      $form['actions']['#weight'] = 8;
-      $form['links']['#weight'] = 10;
       break;
   }
 
