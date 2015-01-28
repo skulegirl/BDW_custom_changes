@@ -327,3 +327,86 @@ function BDW_echo_BDA_legend()
   $retval = popup($attributes);
   echo $retval;
 }
+
+function _BDW_get_memberships()
+{
+  return array(
+    'escapee_member' => array('escapee_member_icon.png', 'Escapee Member', 'SKP Number'),
+    'rvillage_member' => array('rvillage_member_icon.png', 'RVillage Member', 'RVillage Username'),
+    'fmca_member' => array('fmca_member_icon.png', 'FMCA Member', 'FMCA Membership Number'),
+  );
+}
+
+function BDW_echo_group_memberships($data)
+{
+  $basepath = '/media/iconsets/groupbadges/';
+  $vars = $data->_field_data['pid']['entity'];
+
+  $output =  "<div class='GroupMemberships'>";
+
+  $memberships = _BDW_get_memberships();
+  foreach ($memberships as $membership => $details)
+  {
+    $fieldname = 'field_'.$membership;
+    $datafieldname = $fieldname.'_data';
+    $fieldval = $vars->$fieldname;
+    if ($fieldval['und'][0]['value'] == 1) {
+      $datafieldval = $vars->$datafieldname;
+      $data = $datafieldval['und'][0]['value'];
+      $output .= _BDW_get_membership_icon($basepath . $details[0], $details[1], $data, $details[2]);
+    }
+  }
+  $output .= "</div>";
+  echo $output;
+}
+
+function BDW_has_group_memberships($vars) {
+  $memberships = _BDW_get_memberships();
+  foreach ($memberships as $membership => $details)
+  {
+    $fieldname = 'field_'.$membership;
+    $datafieldname = $fieldname.'_data';
+    $fieldval = $vars->$fieldname;
+    if ($fieldval['und'][0]['value'] == 1) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+function _BDW_get_membership_icon($image, $alttext, $data = NULL, $data_title = NULL, $display_data = TRUE)
+{
+  $output = "<div class='MembershipBadge'>";
+  $output .= "<span title='$alttext'>";
+  if (isset($data) && $display_data)
+  {
+    if (isset($data_title))
+    {
+      $data = "<h3>$data_title:</h3> $data";
+    }
+    $attributes = array(
+      'text' => $data,
+      'image' => $image,
+      'title' => $alttext,
+      'id' => 'memberbadge',
+      'style' => 'white',
+      'class' => 'badgepopup',
+      'width' => '100',
+      'origin' => 'top-left',
+      'expand' => 'bottom-right',
+      'close' => 'TRUE',
+    );
+    module_load_include('inc', 'popup', 'includes/popup.api');
+    $retval = popup($attributes);
+    $output .= $retval;
+  }
+  else
+  {
+    $output .= "<img src='/sites/boondockerswelcome.com/files/$image' alt='$alttext'/>";
+  }
+  $output .= "</span>";
+  $output .= "</div>";
+  
+  return $output;
+}
+
