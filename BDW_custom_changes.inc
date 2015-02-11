@@ -344,6 +344,15 @@ function BDW_echo_group_memberships($data)
 
   $output =  "<div class='GroupMemberships'>";
 
+  global $user;
+  if (in_array('full member', array_values($user->roles))) {
+    $display_data = TRUE;
+  }
+  else
+  {
+    $display_data = FALSE;
+  }
+
   $memberships = _BDW_get_memberships();
   foreach ($memberships as $membership => $details)
   {
@@ -353,7 +362,8 @@ function BDW_echo_group_memberships($data)
     if ($fieldval['und'][0]['value'] == 1) {
       $datafieldval = $vars->$datafieldname;
       $data = $datafieldval['und'][0]['value'];
-      $output .= _BDW_get_membership_icon($basepath . $details[0], $details[1], $data, $details[2]);
+      $output .= _BDW_get_membership_icon($basepath . $details[0], 
+        $details[1], $data, $details[2], $display_data);
     }
   }
   $output .= "</div>";
