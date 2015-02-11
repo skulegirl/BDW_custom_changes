@@ -168,6 +168,9 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
     case 'invite_form':
       // hide the silly "show registration link" button on the invite form
       unset($form['submit_show']);
+      // Change the description (i.e. help message) of the invite message slightly
+      $form['message']['#description'] = t('This is the message the invitation email will contain. The <i>[invite:join-link]</i> token in the message will be replaced by the registration link the recipient can use to join. You can personalize the message, but make sure this token is always included.');
+      $form['message']['#rows'] = 10;
       break;
     case 'user_login_block':
       $items = array();
