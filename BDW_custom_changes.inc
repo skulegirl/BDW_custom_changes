@@ -318,6 +318,7 @@ function BDW_echo_BDA_legend()
   $attributes = array(
     'text' => _BDW_get_BDA_legend(),
     'title' => 'Site Icon Legend',
+    'style' => 'McPopup',
     'id' => 'legend',
     'class' => 'legend',
     'width' => '280',
@@ -399,7 +400,7 @@ function _BDW_get_membership_icon($image, $alttext, $data = NULL, $data_title = 
       'image' => $image,
       'title' => $alttext,
       'id' => 'memberbadge',
-      'style' => 'white',
+      'style' => 'obsidian',
       'class' => 'badgepopup',
       'width' => '100',
       'origin' => 'top-left',
