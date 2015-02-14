@@ -104,9 +104,13 @@ function BDW_custom_changes_menu_alter(&$items) {
     'menu_name' => 'secondary-menu',
   ); 
 
+  // Remove tabs from become-an-affiliate registration page
   $items['become-an-affiliate']['type'] = MENU_CALLBACK;
   $items['become-an-affiliate/password']['type'] = MENU_CALLBACK;
   $items['become-an-affiliate/register']['type'] = MENU_CALLBACK;
+
+  // Remove the default user/registration page alltogether
+  unset($items['user/register']);
 
   // Make the new messages link a tab in the message centre instead of a link from the message list.
   $items['messages/new']['type'] = MENU_LOCAL_TASK;
@@ -184,6 +188,12 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       $form['pass']['#weight']= 6;
       $form['actions']['#weight'] = 8;
       $form['links']['#weight'] = 10;
+      break;
+    case 'user_register_form':
+      if($form['#action'] == '/become-an-affiliate/register')
+      {
+        $form['actions']['submit']['#value'] = 'Create Affiliate Account';
+      }
       break;
   }
 
