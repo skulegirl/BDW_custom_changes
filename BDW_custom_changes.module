@@ -188,6 +188,36 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       $form['pass']['#weight']= 6;
       $form['actions']['#weight'] = 8;
       $form['links']['#weight'] = 10;
+      $image = '/media/iconsets/misc/questionmark20x20.png';
+      $attributes = array(
+        'text' => 'You may log in with either your username or your e-mail address',
+        'image' => $image,
+        'title' => '?',
+        'activate' => 'click',
+        'expand' => 'bottom-left',
+        'origin' => 'top-left',
+        'style' => 'McPopup',
+        'id' => 'username-help',
+        'class' => 'help',
+        'width' => '200',
+      );
+      module_load_include('inc', 'popup', 'includes/popup.api');
+      $form['name']['#suffix'] = popup($attributes);
+      $attributes = array(
+        'text' => 'The password field is case sensitive',
+        'image' => $image,
+        'title' => '?',
+        'activate' => 'click',
+        'expand' => 'bottom-left',
+        'origin' => 'top-left',
+        'style' => 'McPopup',
+        'id' => 'userpass-help',
+        'class' => 'help',
+        'width' => '200',
+      );
+      module_load_include('inc', 'popup', 'includes/popup.api');
+      $form['pass']['#suffix'] = popup($attributes);
+      dd($form['name']);
       break;
     case 'user_register_form':
       if($form['#action'] == '/become-an-affiliate/register')
