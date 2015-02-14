@@ -95,7 +95,7 @@ function BDW_custom_changes_menu_alter(&$items) {
     'menu_name' => 'secondary-menu',
   );
 
-  $items['become-an-affiliate'] = array(
+  $items['become-an-affiliate-member'] = array(
     'title' => 'Become an Affiliate',
     'description' => 'Sell Boondockers Welcome Memberships and Make Money',
     'page callback' => 'BDW_custom_changes_become_an_affiliate',
@@ -103,6 +103,10 @@ function BDW_custom_changes_menu_alter(&$items) {
     'type' => MENU_NORMAL_ITEM,
     'menu_name' => 'secondary-menu',
   ); 
+
+  $items['become-an-affiliate']['type'] = MENU_CALLBACK;
+  $items['become-an-affiliate/password']['type'] = MENU_CALLBACK;
+  $items['become-an-affiliate/register']['type'] = MENU_CALLBACK;
 
   // Make the new messages link a tab in the message centre instead of a link from the message list.
   $items['messages/new']['type'] = MENU_LOCAL_TASK;
