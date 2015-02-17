@@ -396,3 +396,31 @@ function BDW_custom_changes_query_alter(QueryAlterableInterface $query) {
       'membership_level'));
   }
 }
+
+/* Custom computed field function electric hookup for comparison during search views */
+function computed_field_field_ba_electric_hookup_compute_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items)
+{
+  $value = 'No';
+  $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
+  foreach ($hookups as $hookup) {
+    if ($hookup['value'] === 'Electric Hookup Available') {
+        $value = 'Yes';
+        break;
+    }
+  }
+  $entity_field[0]['value'] = $value;
+}
+
+/* Custom computed field function water hookup for comparison during search views */
+function computed_field_field_ba_water_hookup_computed_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items)
+{
+  $value = 'No';
+  $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
+  foreach ($hookups as $hookup) {
+    if ($hookup['value'] === 'Water Hookup Available') {
+        $value = 'Yes';
+        break;
+    }
+  }
+  $entity_field[0]['value'] = $value;
+}
