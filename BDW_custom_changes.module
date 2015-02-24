@@ -217,7 +217,6 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       );
       module_load_include('inc', 'popup', 'includes/popup.api');
       $form['pass']['#suffix'] = popup($attributes);
-      dd($form['name']);
       break;
     case 'user_register_form':
       if($form['#action'] == '/become-an-affiliate/register')
