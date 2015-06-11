@@ -132,20 +132,20 @@ function BDW_custom_changes_menu_alter(&$items) {
 function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
     case 'contact_site_form':
-      $form['contact_information']['#weight'] = -15;
-      $form['name']['#weight'] = -10;
-      $form['mail']['#weight'] = -5;
+      $form['contact_information']['#weight'] = 5;
+      $form['name']['#weight'] = 10;
+      $form['mail']['#weight'] = 15;
       $form['field_email_confirmation'] = array(
         '#type' => 'textfield',
         '#title' => 'Confirm your e-mail address',
         '#size' => 60,
-        '#weight' => 0,
+        '#weight' => 20,
         '#maxlength' => 255,
         '#required' => TRUE,
       ); 
-      $form['subject']['#weight'] = 5;
-      $form['cid']['#weight'] = 10;
-      $form['message']['#weight'] = 15;
+      $form['subject']['#weight'] = 25;
+      $form['cid']['#weight'] = 30;
+      $form['message']['#weight'] = 35;
       $form['copy']['#weight'] = 101;
       $form['actions']['#weight'] = 200;
       $form['#validate'][] = 'BDW_custom_email_confirm_validate';
