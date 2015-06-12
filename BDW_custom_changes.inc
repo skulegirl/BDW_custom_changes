@@ -128,6 +128,7 @@ function _BDW_site_provides($vars)
   $basepath = '/sites/boondockerswelcome.com/files/media/iconsets/services/';
 
   $services = FALSE;
+  $dump = $electric = $water = FALSE;
   $output = "<div class='SiteProvides'>";
 
   $active = FALSE;
@@ -378,7 +379,7 @@ function BDW_has_group_memberships($vars) {
     $fieldname = 'field_'.$membership;
     $datafieldname = $fieldname.'_data';
     $fieldval = $vars->$fieldname;
-    if ($fieldval['und'][0]['value'] == 1) {
+    if (!empty($fieldval) && $fieldval['und'][0]['value'] == 1) {
       return TRUE;
     }
   }
