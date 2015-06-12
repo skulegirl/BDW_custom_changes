@@ -132,21 +132,21 @@ function _BDW_site_provides($vars)
   $output = "<div class='SiteProvides'>";
 
   $active = FALSE;
-  if ($vars->field_ba_pullthrough_spot['und'][0]['value'] === "Yes") {
+  if (!empty($vars->field_ba_pullthrough_spot) && $vars->field_ba_pullthrough_spot['und'][0]['value'] === "Yes") {
     $active = TRUE;
     $services = TRUE;
   }
   $output .= _BDW_get_services_icon($basepath . 'pull-through-parking-icon.png', 'Pull Through Parking Available', $active);
 
   $active = FALSE;
-  if ($vars->field_ba_wifi_available['und'][0]['value'] === "Yes") {
+  if (!empty($vars->field_ba_wifi_available) && $vars->field_ba_wifi_available['und'][0]['value'] === "Yes") {
     $active = TRUE;
     $services = TRUE;
   }
   $output .= _BDW_get_services_icon($basepath . 'wifi-icon.png', 'Wifi Available', $active);
 
 
-  if(isset($vars->field_ba_hookups))
+  if(!empty($vars->field_ba_hookups))
   {
     foreach ($vars->field_ba_hookups['und'] as $hookup)
     {
