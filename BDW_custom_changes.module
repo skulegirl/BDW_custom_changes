@@ -366,7 +366,6 @@ function BDW_custom_changes_image_field_widget_preprocess($element, &$form_state
 function BDW_custom_changes_uc_product_alter(&$node) {
   global $user;
   if (module_exists('uc_multiprice')) {
-    dd($node, 'node');
     if ($node->type == 'membership_level') {
       $country_id = uc_multiprice_country_id();
       switch ($country_id['currency_code']) {
@@ -378,10 +377,10 @@ function BDW_custom_changes_uc_product_alter(&$node) {
               foreach ((array)$attribute->options as $oid => $option) {
                 if ($option->name == '3 Years') {
                   if(preg_match('/^.*-BDA-Class1.*$/i', $node->model)) {
-                      $node->attributes[$aid]->options[$oid]->price = 29.0000;
+                      $node->attributes[$aid]->options[$oid]->price = 28.0000;
                   }
                   if(preg_match('/^.*-NoBDA-Class1.*$/i', $node->model)) {
-                      $node->attributes[$aid]->options[$oid]->price = 40.0000;
+                      $node->attributes[$aid]->options[$oid]->price = 38.0000;
                   }
                 }
               }
