@@ -23,6 +23,11 @@ function BDW_custom_changes_init() {
   }
 }
 
+function BDW_custom_changes_my_bookmarked_members() {
+  global $user;
+  drupal_goto('user/'.$user->uid.'/my_bookmarked_members');
+}
+
 function BDW_custom_changes_my_affiliate_center() {
   global $user;
   drupal_goto('user/'.$user->uid.'/affiliate');
@@ -104,6 +109,15 @@ function BDW_custom_changes_menu_alter(&$items) {
     'menu_name' => 'secondary-menu',
   ); 
 
+  $items['my-bookmarked-members'] = array(
+    'title'     => 'My Bookmarked Members',
+    'description' => 'Go to my bookmarked members',
+    'page callback' => 'BDW_custom_changes_my_bookmarked_members',
+    'access callback' => 'user_is_logged_in',
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'navigation',
+    'weight' => -30,
+  );
   // Remove tabs from become-an-affiliate registration page
   $items['become-an-affiliate']['type'] = MENU_CALLBACK;
   $items['become-an-affiliate/password']['type'] = MENU_CALLBACK;
