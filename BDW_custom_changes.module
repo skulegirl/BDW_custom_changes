@@ -284,6 +284,11 @@ function BDW_custom_changes_mail_alter(&$message) {
          $message['headers']['From'] = $message['from'] = variable_get('site_mail', ini_get('sendmail_from'));
       break;
    }
+
+   $message['mandrill_template_content'][] = array(
+     'name' => 'subject',
+     'content' => $message['subject'],
+     );
 }
 
 function BDW_custom_email_confirm_validate($form, &$form_state) {
