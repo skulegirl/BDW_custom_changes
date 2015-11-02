@@ -263,6 +263,37 @@ function BDW_custom_changes_payment_method_alter(&$methods) {
 }
 
 /**
+ ** Implementation of hook_checkout_pane
+ **/
+function BDW_custom_changes_uc_checkout_pane() {
+  $panes[] = array(
+    'id' => 'bdw_rig',
+    'callback' => 'bdw_checkout_pane_rig_agreement',
+    'title' => t('Eligibility confirmation'),
+    'desc' => t("A checkbox for the customer to confirm his RV's elegibility."),
+    'weight' => 5,
+    'collapsible' => FALSE,
+  );
+  return $panes;
+}
+
+function bdw_checkout_pane_rig_agreement($op) {
+  switch ($op) {
+    case 'view':
+      //Show Checkbox
+      $contents['bdw_rig']['agree'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Elegibility confirmation'),
+
+        '#options' => array('bdw_rig' => 'By checking this, I confirm that I travel in an RV with sanitary facilities that include a toilet and holding tank. This is a requirement of membership. Please note that membership will be cancelled but dues will NOT be refunded if a host reports that this is not true. <a href="/faq-page#t31n6316">See our Faq for more details.</a>'),
+        '#weight' => 1,
+        '#required' => true,
+      );
+      return array('contents' => $contents, 'next-button' => FALSE);
+  }
+}
+
+/**
  ** Implementation of hook_checkout_pane_alter
  ** make panes on checkout page not collapsible
  */
