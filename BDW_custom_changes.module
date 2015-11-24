@@ -499,3 +499,46 @@ function computed_field_field_ba_water_hookup_computed_compute(&$entity_field, $
   }
   $entity_field[0]['value'] = $value;
 }
+
+/****
+ *Create Custom token for possessive user names 
+ ****/
+
+/* Implement hook_token_info */
+function BDW_custom_changes_token_info()
+{
+  $info['tokens']['user']['possessive_name'] = array(
+    'name' => t('Posessive name'),
+    'description' => t('Possessive form of user name '),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_tokens(). This hook will replace the token with it's value.
+ */
+function BDW_custom_changes_tokens($type, $tokens, array $data = array(), array $options = array()) {
+    $replacements = array();
+    $sanitize = !empty($options['sanitize']);
+    if ($type == 'user' && !empty($data['user'])) {
+        $user = $data['user'];
+
+        foreach ($tokens as $name => $original) {
+          switch($name) {
+            case 'possessive_name':
+              $formatted_name = format_username($user);
+              $replacements[$original] = $sanitize ? check_plain($formatted_name) : $formatted_name;
+              if(substr($replacements[$original], -1 == 's'))
+              {
+                $replacements[$original] .= "'";
+              }
+              else
+              {
+                $replacements[$original] .="'s";
+              }
+          }
+        }
+    }
+    return $replacements;
+}
+
