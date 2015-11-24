@@ -235,7 +235,7 @@ function BDW_echo_BDA_services($data)
 {
   echo "<div class='SiteServices'>";
   $output = _BDW_site_provides($data->_field_data['pid']['entity']);
-  echo "<h2 class='block-title'>Site Provides:</h2>";
+  echo "<h2 class='block-title'>Site Has Available:</h2>";
   echo $output;
 
   $output = _BDW_site_welcomes($data->_field_data['pid']['entity']);
