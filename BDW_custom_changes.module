@@ -528,7 +528,7 @@ function BDW_custom_changes_tokens($type, $tokens, array $data = array(), array 
             case 'possessive_name':
               $formatted_name = format_username($user);
               $replacements[$original] = $sanitize ? check_plain($formatted_name) : $formatted_name;
-              if(substr($replacements[$original], -1 == 's'))
+              if(substr($replacements[$original], -1) == 's')
               {
                 $replacements[$original] .= "'";
               }
