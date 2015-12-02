@@ -135,7 +135,7 @@ function BDW_custom_changes_menu_alter(&$items) {
   $items['user/%user/invites']['weight'] = 50;
 
   // remove the shopping cart from the menu
-  unset($items['cart']);
+//  unset($items['cart']);
 }
 
 /** 
@@ -242,7 +242,9 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
 
   if (strpos($form_id, 'uc_product_add_to_cart_form') !== false)
   {
-    $form['actions']['submit']['#value'] = t('Sign Me Up!');
+    if ($form['node']['#value']->type == 'membership_level') {
+      $form['actions']['submit']['#value'] = t('Sign Me Up!');
+    }
   }
 }
 
