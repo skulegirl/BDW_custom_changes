@@ -544,3 +544,26 @@ function BDW_custom_changes_tokens($type, $tokens, array $data = array(), array 
     return $replacements;
 }
 
+
+function BDW_custom_changes_mandrill_mailsend_result($result) {
+  if ( in_array($result['status'], array('rejected', 'invalid', 'error')) ) {
+    // remove email from pool
+    module_load_include('inc', 'simplenews', 'includes/simplenews.mail');
+    simplenews_delete_spool(array('mail'=>$result['email']));
+
+    if ( in_array($result['status'], array('invalid')) ) {
+      // unsubscribe user if mail does not exists
+      $subscriber = simplenews_subscriber_load_by_mail($result['email']);
+      if ($subscriber) {
+        simplenews_subscriber_delete($subscriber);
+      }
+      // disable user
+      $user = user_load_by_mail($result['email']);
+      if ($user)
+      {
+        $user->status = 0;
+        user_save($user->uid);
+      }
+    }
+  }
+}
