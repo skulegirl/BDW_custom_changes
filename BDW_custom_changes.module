@@ -394,7 +394,7 @@ function BDW_custom_changes_form_profile2_edit_boondocking_available_form_alter(
   if (isset ($bda_current_loc_info) && 
       ($bda_current_loc_info['lid'] == 0 || (
        $bda_current_loc_info['latitude'] == 0 && $bda_current_loc_info['longitude'] == 0))) {
-    $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'] = "<div class='loc-error'>Your location is currently invalid. Plesae enter a valid location.</div>" . $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'];
+    $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'] = "<div class='loc-error'>Your location is currently invalid. Please enter a valid location.</div>" . $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'];
   }
 }
 
