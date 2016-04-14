@@ -567,3 +567,31 @@ function BDW_custom_changes_mandrill_mailsend_result($result) {
     }
   }
 }
+
+function BDW_custom_changes_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data)
+{
+  if ($result_code != 200)
+  {
+    // remove email from pool
+    module_load_include('inc', 'simplenews', 'includes/simplenews.mail');
+    simplenews_delete_spool(array('mail'=>$to));
+
+    // Check if 5xx return code - if so, permanent error, remove from spool.
+    if ( floor($result_code/100)==5 ) 
+    {
+      // unsubscribe user if mail does not exists
+      $subscriber = simplenews_subscriber_load_by_mail($to);
+      if ($subscriber) {
+        simplenews_subscriber_delete($subscriber);
+      }
+      // disable user
+      $user = user_load_by_mail($to);
+      if ($user)
+      {
+        $user->status = 0;
+        user_save($user->uid);
+      }
+    }
+  }
+}
+
