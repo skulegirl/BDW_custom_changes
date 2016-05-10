@@ -479,10 +479,12 @@ function computed_field_field_ba_electric_hookup_compute_compute(&$entity_field,
 {
   $value = 'No';
   $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
-  foreach ($hookups as $hookup) {
-    if ($hookup['value'] === 'Electric Hookup Available') {
-        $value = 'Yes';
-        break;
+  if ($hookups) {
+    foreach ($hookups as $hookup) {
+      if ($hookup['value'] === 'Electric Hookup Available') {
+          $value = 'Yes';
+          break;
+      }
     }
   }
   $entity_field[0]['value'] = $value;
@@ -493,10 +495,12 @@ function computed_field_field_ba_water_hookup_computed_compute(&$entity_field, $
 {
   $value = 'No';
   $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
-  foreach ($hookups as $hookup) {
-    if ($hookup['value'] === 'Water Hookup Available') {
-        $value = 'Yes';
-        break;
+  if ($hookups) {
+    foreach ($hookups as $hookup) {
+      if ($hookup['value'] === 'Water Hookup Available') {
+          $value = 'Yes';
+          break;
+      }
     }
   }
   $entity_field[0]['value'] = $value;
