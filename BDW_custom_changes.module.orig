@@ -1,0 +1,601 @@
+<?php
+/**
+ *  implementation of hook_init to override login page titles
+ */
+
+function BDW_custom_changes_init() {
+
+  $file = drupal_get_path('module', 'node') . '/node.pages.inc';
+  include_once './' . $file;
+
+  // Customize the user login/register/password page titles
+  // Strings match the page titles as set in user_menu() so they are translated
+  if (arg(0) == 'user' && arg(1) == 'register') {
+      drupal_set_title(t('Join Boondockers Welcome'));
+  } elseif (arg(0) == 'user' && arg(1) == 'password') {
+      drupal_set_title(t('Request new password'));
+  } elseif (arg(0) == 'user' && arg(1) == 'login') {
+      drupal_set_title(t('Log in to your Boondockers Welcome Account'));
+  } elseif (arg(0) == 'user' && arg(1) == '') {
+      drupal_set_title(t('Log in to your Boondockers Welcome Account'));
+  } elseif (arg(0) == 'user' && arg(2) == 'profile' && arg(3) == 'affiliate_info') {
+      drupal_set_title(t('Become an Affiliate'));
+  }
+}
+
+function BDW_custom_changes_my_bookmarked_members() {
+  global $user;
+  drupal_goto('user/'.$user->uid.'/my_bookmarked_members');
+}
+
+function BDW_custom_changes_my_affiliate_center() {
+  global $user;
+  drupal_goto('user/'.$user->uid.'/affiliate');
+  
+}
+
+function BDW_custom_changes_become_an_affiliate() {
+  global $user;
+  if ($user->uid)
+  {
+    drupal_goto('user/'.$user->uid.'/edit/affiliate_info');
+  }
+  else
+  {
+    drupal_goto('become-an-affiliate/register');
+  }
+}
+
+function BDW_custom_changes_become_an_affiliate_access() {
+  global $user;
+  // only access if user is not already an affiliate
+  return !in_array('affiliate', $user->roles);
+}
+
+
+/**
+  * implementation of hook_menu_alter to override the user edit tab 
+  * Change the title to "Account Info"
+  * Also, hide the Affiliate Information tab if user is not an affiliate
+  */
+
+function BDW_custom_changes_menu_alter(&$items) {
+  // Change edit to have "Account Info" for the tab title instead.
+  $profile_edit_path = 'user/%user_category/edit/profile';
+  $items[$profile_edit_path]['tab_parent'] = 'user/%';
+  $items[$profile_edit_path]['weight'] = 0;
+
+  $bda_edit_path = 'user/%user_category/edit/boondocking_available';
+  $items[$bda_edit_path]['tab_parent'] = 'user/%';
+  $items[$bda_edit_path]['weight'] = 1;
+
+  $userEditTabPath = 'user/%user/edit';
+  $items[$userEditTabPath]['title'] = 'Account Info';
+  $items[$userEditTabPath]['weight'] = 2;
+
+  $items['affilate-center'] = array(
+    'title'     => 'Affiliate center',
+    'description' => 'Go to the affiliate center',
+    'page callback' => 'BDW_custom_changes_my_affiliate_center',
+    'access arguments' => array('act as affiliate'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Move the affiliate info tab to be a subtab of affiliate centre instead
+  $affiliate_info_path = 'user/%user_category/edit/affiliate_info';
+  $items[$affiliate_info_path]['tab_parent'] = 'user/%/affiliate';
+  $items[$affiliate_info_path]['weight'] = -1;
+  
+  // Hide the 'Generate links' tab for affiliates
+//  $affiliate_generate_links_path = 'user/%user/affiliate/links';
+//  $items[$affiliate_generate_links_path]['type'] = MENU_CALLBACK;
+
+
+  $items['my-affiliate-center'] = array(
+    'title'     => 'My Affiliate Center',
+    'description' => 'Go to the affiliate center',
+    'page callback' => 'BDW_custom_changes_my_affiliate_center',
+    'access arguments' => array('act as affiliate'),
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'secondary-menu',
+  );
+
+  $items['become-an-affiliate-member'] = array(
+    'title' => 'Become an Affiliate',
+    'description' => 'Sell Boondockers Welcome Memberships and Make Money',
+    'page callback' => 'BDW_custom_changes_become_an_affiliate',
+    'access callback' => 'BDW_custom_changes_become_an_affiliate_access',
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'secondary-menu',
+  ); 
+
+  $items['my-bookmarked-members'] = array(
+    'title'     => 'My Bookmarked Members',
+    'description' => 'Go to my bookmarked members',
+    'page callback' => 'BDW_custom_changes_my_bookmarked_members',
+    'access callback' => 'user_is_logged_in',
+    'type' => MENU_NORMAL_ITEM,
+    'menu_name' => 'navigation',
+    'weight' => -30,
+  );
+  // Remove tabs from become-an-affiliate registration page
+  $items['become-an-affiliate']['type'] = MENU_CALLBACK;
+  $items['become-an-affiliate/password']['type'] = MENU_CALLBACK;
+  $items['become-an-affiliate/register']['type'] = MENU_CALLBACK;
+
+  // Remove the default user/registration page alltogether
+  unset($items['user/register']);
+
+  // Make the new messages link a tab in the message centre instead of a link from the message list.
+  $items['messages/new']['type'] = MENU_LOCAL_TASK;
+
+  // hide the Boondocker Points tab for users
+  $items['user/%user/points']['type'] = MENU_CALLBACK;
+
+  $items['user/%user/invites']['weight'] = 50;
+
+  // remove the shopping cart from the menu
+//  unset($items['cart']);
+}
+
+/** 
+ ** Implementation of hook_form_alter to disable preview buttons on 
+ **  user_recommendation nodes. 
+ ** Also add a confirm email address field on contact forms.
+ **/
+function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'contact_site_form':
+      $form['contact_information']['#weight'] = 5;
+      $form['name']['#weight'] = 10;
+      $form['mail']['#weight'] = 15;
+      $form['field_email_confirmation'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Confirm your e-mail address',
+        '#size' => 60,
+        '#weight' => 20,
+        '#maxlength' => 255,
+        '#required' => TRUE,
+      ); 
+      $form['subject']['#weight'] = 25;
+      $form['cid']['#weight'] = 30;
+      $form['message']['#weight'] = 35;
+      $form['copy']['#weight'] = 101;
+      $form['actions']['#weight'] = 200;
+      $form['#validate'][] = 'BDW_custom_email_confirm_validate';
+      break; 
+    case 'user_profile_form':
+    	$form['account']['mail']['#description'] = t('A valid e-mail address. Notifications of messages from other members will be forwarded to this account, so please ensure it is one you check regularly. This e-mail address is not made public to anyone, including other members.');
+      break;
+    case 'uc_cart_checkout_form':
+      $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<iframe src="https://www.paywithatweet.com/dlbutton01.php?id=a9c2979da2a21b5f4b1497af631fb549" name="paytweet_button" scrolling="no" frameborder="no" height="24px" width="145px" style="padding: 10px; vertical-align:middle"></iframe>');
+      $form['panes']['customer']['#description'] = t('Enter a valid email address for your account. All messages from other members will be forwarded to this address, so be sure to choose an account you check regularly.');
+      $form['panes']['payment']['details']['#markup'] = t('Click "Review order" below to continue');
+      if(isset($form['panes']['payment']['payment_method']['#options']['paypal_wps']))
+      {
+        $form['panes']['payment']['payment_method']['#options']['paypal_wps'] = t('Paypal: <img src="https://www.paypal.com/en_US/i/logo/PayPal_mark_37x23.gif" alt="PayPal" class="uc-credit-cctype" />');
+      }
+      break;
+    case 'user_recommendation_node_form':
+    	unset($form['actions']['preview']);
+      $uid = arg(3);
+      if (user_load($uid))
+      {
+          $form['field_ur_fellow_boondocker']['und'][0]['uid']['#default_value'] = $uid;
+      }
+      break;
+    case 'password_hustle_user_pass_reset':
+      $form['pass']['#title'] = t('You are using a password reset link. Please change your password to something memorable for easier logins in the future.');
+      break;
+    case 'invite_form':
+      // hide the silly "show registration link" button on the invite form
+      unset($form['submit_show']);
+      // Change the description (i.e. help message) of the invite message slightly
+      $form['message']['#description'] = t('This is the message the invitation email will contain. The <i>[invite:join-link]</i> token in the message will be replaced by the registration link the recipient can use to join. You can personalize the message, but make sure this token is always included.');
+      $form['message']['#rows'] = 10;
+      break;
+    case 'user_login_block':
+      $items = array();
+      $items[] = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password vie e-mail.'))));
+      $form['links'] = array('#markup' => theme('item_list', array('items' => $items)));
+      $form['name']['#weight'] = 4;
+      $form['pass']['#weight']= 6;
+      $form['actions']['#weight'] = 8;
+      $form['links']['#weight'] = 10;
+      $image = '/media/iconsets/misc/questionmark20x20.png';
+      $attributes = array(
+        'text' => 'You may log in with either your username or your e-mail address',
+        'image' => $image,
+        'title' => '?',
+        'activate' => 'click',
+        'expand' => 'bottom-left',
+        'origin' => 'top-left',
+        'style' => 'McPopup',
+        'id' => 'username-help',
+        'class' => 'help',
+        'width' => '200',
+      );
+      module_load_include('inc', 'popup', 'includes/popup.api');
+      $form['name']['#suffix'] = popup($attributes);
+      $attributes = array(
+        'text' => 'The password field is case sensitive',
+        'image' => $image,
+        'title' => '?',
+        'activate' => 'click',
+        'expand' => 'bottom-left',
+        'origin' => 'top-left',
+        'style' => 'McPopup',
+        'id' => 'userpass-help',
+        'class' => 'help',
+        'width' => '200',
+      );
+      module_load_include('inc', 'popup', 'includes/popup.api');
+      $form['pass']['#suffix'] = popup($attributes);
+      break;
+    case 'user_register_form':
+      if($form['#action'] == '/become-an-affiliate/register')
+      {
+        $form['actions']['submit']['#value'] = 'Create Affiliate Account';
+      }
+      break;
+  }
+
+  if (strpos($form_id, 'uc_product_add_to_cart_form') !== false)
+  {
+    if ($form['node']['#value']->type == 'membership_level') {
+      $form['actions']['submit']['#value'] = t('Sign Me Up!');
+    }
+  }
+}
+
+/**
+ ** Implementation of hook_payment_method_alter
+ **/
+
+function BDW_custom_changes_payment_method_alter(&$methods) {
+  foreach ($methods as &$method) {
+    // $method was passed by reference.
+    switch ($method['id']) {
+      case 'paypal_wps':
+      case 'paypal_ec':
+        $method['review'] = t('Paypal, credit or debit');
+	break;
+    }
+  }
+}
+
+/**
+ ** Implementation of hook_checkout_pane
+ **/
+function BDW_custom_changes_uc_checkout_pane() {
+  $panes[] = array(
+    'id' => 'bdw_rig',
+    'callback' => 'bdw_checkout_pane_rig_agreement',
+    'title' => t('Eligibility confirmation'),
+    'desc' => t("A checkbox for the customer to confirm his RV's elegibility."),
+    'weight' => 5,
+    'collapsible' => FALSE,
+  );
+  return $panes;
+}
+
+function bdw_checkout_pane_rig_agreement($op) {
+  switch ($op) {
+    case 'view':
+      //Show Checkbox
+      $contents['bdw_rig']['agree'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Elegibility confirmation'),
+
+        '#options' => array('bdw_rig' => 'By checking this, I confirm that I travel in an RV with sanitary facilities that include a toilet and holding tank. This is a requirement of membership. Please note that membership will be cancelled but dues will NOT be refunded if a host reports that this is not true. <a href="/faq-page#t31n6316">See our Faq for more details.</a>'),
+        '#weight' => 1,
+        '#required' => true,
+      );
+      return array('contents' => $contents, 'next-button' => FALSE);
+  }
+}
+
+/**
+ ** Implementation of hook_checkout_pane_alter
+ ** make panes on checkout page not collapsible
+ */
+
+function BDW_custom_changes_checkout_pane_alter(&$panes) {
+
+  foreach ($panes as &$pane) {
+    $pane['collapsible'] = FALSE;
+  } 
+}
+
+/**
+ ** Implementation of hook_mail_alter to fix the return address being 
+ ** wrong on the site-wide contact auto-reply.
+ **/
+function BDW_custom_changes_mail_alter(&$message) {
+   switch ($message['id']) {
+      case 'contact_page_autoreply':
+         $message['headers']['From'] = $message['from'] = variable_get('site_mail', ini_get('sendmail_from'));
+      break;
+   }
+
+   $message['mandrill_template_content'][] = array(
+     'name' => 'subject',
+     'content' => $message['subject'],
+     );
+}
+
+function BDW_custom_email_confirm_validate($form, &$form_state) {
+  if (!($form_state['values']['mail'] == $form_state['values']['field_email_confirmation']))
+  {
+    form_set_error('mail', 'Your email addresses do not match, please check and resubmit');
+    // adding element than removing it per http://drupal.org/node/155695
+    form_set_error('field_email_confirmation', 'Error');
+    array_pop($_SESSION['messages']['error']);
+  }
+}
+
+function BDW_custom_changes_location_element_alter(&$element)
+{
+  $element['city']['#title'] = 'Nearest City/Town';
+}
+
+/**
+ * Implement hook_rules_condition_info()
+ */
+
+function BDW_custom_changes_rules_condition_info()
+{
+  return array(
+    'BDW_custom_changes_rules_condition_first_login' => array(
+      'group' => 'user',
+      'label' => t('User is logging in for the first time'),
+      'module' => 'BDW_custom_changes',
+    ),
+  );
+}
+
+function BDW_custom_changes_rules_condition_first_login()
+{
+  return isset($_SESSION['first_login']) ? TRUE : FALSE;
+}
+
+/**
+ * implement hook_user_login()
+ */
+function BDW_custom_changes_user_login(&$edit, $account)
+{
+  if ($account->access == 0)
+  {
+    $_SESSION['first_login'] = true;
+  }
+}
+
+/**
+ * Implement hook_form_profile2_form_alter
+ * Remove the text format fields from the profile2 forms
+ */
+
+function BDW_custom_changes_form_profile2_form_alter(&$form, &$form_state)
+{
+  if (!user_access('view hidden fields')) {
+    // Hide the text format selection 
+    $js = 'jQuery(document).ready(function($) {
+      $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
+    });';
+    drupal_add_js($js, 'inline');
+  }
+}
+
+/**
+ * Implement hook_form_profile2_edit_PROFILE_TYPE_form_alter
+ */
+function BDW_custom_changes_form_profile2_edit_boondocking_available_form_alter(&$form, &$form_state) {
+  $bda_current_loc_info = $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#default_value'];
+  if (isset ($bda_current_loc_info) && 
+      ($bda_current_loc_info['lid'] == 0 || (
+       $bda_current_loc_info['latitude'] == 0 && $bda_current_loc_info['longitude'] == 0))) {
+    $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'] = "<div class='loc-error'>Your location is currently invalid. Please enter a valid location.</div>" . $form['profile_boondocking_available']['field_boondock_location']['und'][0]['#description'];
+  }
+}
+
+function BDW_custom_changes_field_widget_form_alter(&$element, &$form_state, $context)
+{
+  if ($context['field']['type'] == 'image')
+  {
+    foreach (element_children($element) as $key => $child)
+    {
+      $element[$key]['#process'][] = 'BDW_custom_changes_image_field_widget_preprocess';
+    }
+  }
+}
+
+function BDW_custom_changes_image_field_widget_preprocess($element, &$form_state, $form) 
+{
+  $element['title']['#description'] = t('Enter a descriptive title for the image (optional).');
+  return $element;
+}
+
+function BDW_custom_changes_uc_product_alter(&$node) {
+  global $user;
+  if (module_exists('uc_multiprice')) {
+    if ($node->type == 'membership_level') {
+      $country_id = uc_multiprice_country_id();
+      switch ($country_id['currency_code']) {
+        case 'CAD': // Canada
+          foreach ($node->attributes as $aid => $attribute)
+          {
+            if ($attribute->name == 'subscription_length') {
+              // There may be many selected options, or just one.
+              foreach ((array)$attribute->options as $oid => $option) {
+                if ($option->name == '3 Years') {
+                  if(preg_match('/^.*-BDA-Class1.*$/i', $node->model)) {
+                      $node->attributes[$aid]->options[$oid]->price = 28.0000;
+                  }
+                  if(preg_match('/^.*-NoBDA-Class1.*$/i', $node->model)) {
+                      $node->attributes[$aid]->options[$oid]->price = 38.0000;
+                  }
+                }
+              }
+            }
+          }
+        default: 
+          break;
+      }
+    }
+  }
+  if(preg_match('/^.*-renewal$/i', $node->model))
+  {
+    $aid = 3; //subscription length attribute
+    $attr = $node->attributes[$aid];
+    foreach ($node->attributes[$aid]->options as &$option)
+    {
+      if ($option->name == "1 Year") 
+      {
+        $option->name = "1 Year + 1 month free";
+      }
+      elseif ($option->name == "3 Years")
+      {
+        $option->name = "3 Years + 3 months free";
+      }
+    } 
+  } 
+}
+
+function BDW_custom_changes_form_contact_site_form_alter(&$form, &$form_state) {
+  drupal_set_title('Contact Boondockers Welcome');
+}
+
+function BDW_custom_changes_query_alter(QueryAlterableInterface $query) {
+  if ($query->hasTag('node_export_features')) {
+    $query->condition('n.type', array(
+      'page', 
+      'news_and_reminders',
+      'membership_level'));
+  }
+}
+
+/* Custom computed field function electric hookup for comparison during search views */
+function computed_field_field_ba_electric_hookup_compute_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items)
+{
+  $value = 'No';
+  $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
+  if ($hookups) {
+    foreach ($hookups as $hookup) {
+      if ($hookup['value'] === 'Electric Hookup Available') {
+          $value = 'Yes';
+          break;
+      }
+    }
+  }
+  $entity_field[0]['value'] = $value;
+}
+
+/* Custom computed field function water hookup for comparison during search views */
+function computed_field_field_ba_water_hookup_computed_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items)
+{
+  $value = 'No';
+  $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
+  if ($hookups) {
+    foreach ($hookups as $hookup) {
+      if ($hookup['value'] === 'Water Hookup Available') {
+          $value = 'Yes';
+          break;
+      }
+    }
+  }
+  $entity_field[0]['value'] = $value;
+}
+
+/****
+ *Create Custom token for possessive user names 
+ ****/
+
+/* Implement hook_token_info */
+function BDW_custom_changes_token_info()
+{
+  $info['tokens']['user']['possessive_name'] = array(
+    'name' => t('Posessive name'),
+    'description' => t('Possessive form of user name '),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_tokens(). This hook will replace the token with it's value.
+ */
+function BDW_custom_changes_tokens($type, $tokens, array $data = array(), array $options = array()) {
+    $replacements = array();
+    $sanitize = !empty($options['sanitize']);
+    if ($type == 'user' && !empty($data['user'])) {
+        $user = $data['user'];
+
+        foreach ($tokens as $name => $original) {
+          switch($name) {
+            case 'possessive_name':
+              $formatted_name = format_username($user);
+              $replacements[$original] = $sanitize ? check_plain($formatted_name) : $formatted_name;
+              if(substr($replacements[$original], -1) == 's')
+              {
+                $replacements[$original] .= "'";
+              }
+              else
+              {
+                $replacements[$original] .="'s";
+              }
+          }
+        }
+    }
+    return $replacements;
+}
+
+
+function BDW_custom_changes_mandrill_mailsend_result($result) {
+  if ( in_array($result['status'], array('rejected', 'invalid', 'error')) ) {
+    // remove email from pool
+    module_load_include('inc', 'simplenews', 'includes/simplenews.mail');
+    simplenews_delete_spool(array('mail'=>$result['email']));
+
+    if ( in_array($result['status'], array('invalid')) ) {
+      // unsubscribe user if mail does not exists
+      $subscriber = simplenews_subscriber_load_by_mail($result['email']);
+      if ($subscriber) {
+        simplenews_subscriber_delete($subscriber);
+      }
+      // disable user
+      $user = user_load_by_mail($result['email']);
+      if ($user)
+      {
+        $user->status = 0;
+        user_save($user->uid);
+      }
+    }
+  }
+}
+
+function BDW_custom_changes_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data)
+{
+  if ($result_code != 200)
+  {
+    // remove email from pool
+    module_load_include('inc', 'simplenews', 'includes/simplenews.mail');
+    simplenews_delete_spool(array('mail'=>$to));
+
+    // Check if 5xx return code - if so, permanent error, remove from spool.
+    if ( floor($result_code/100)==5 ) 
+    {
+      // unsubscribe user if mail does not exists
+      $subscriber = simplenews_subscriber_load_by_mail($to);
+      if ($subscriber) {
+        simplenews_subscriber_delete($subscriber);
+      }
+      // disable user
+      $user = user_load_by_mail($to);
+      if ($user)
+      {
+        $user->status = 0;
+        user_save($user->uid);
+      }
+    }
+  }
+}
+

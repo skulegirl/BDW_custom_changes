@@ -169,7 +169,29 @@ function BDW_custom_changes_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'uc_cart_checkout_form':
       $form['panes']['coupon']['#description'] = t('Enter a coupon code for this order.<br/>Don\'t have a coupon code? Get a 5% off coupon just by sharing our site with your social network.<iframe src="https://www.paywithatweet.com/dlbutton01.php?id=a9c2979da2a21b5f4b1497af631fb549" name="paytweet_button" scrolling="no" frameborder="no" height="24px" width="145px" style="padding: 10px; vertical-align:middle"></iframe>');
-      $form['panes']['customer']['#description'] = t('Enter a valid email address for your account. All messages from other members will be forwarded to this address, so be sure to choose an account you check regularly.');
+      global $user;
+      if ($user->uid == 0) {
+        // assume initially that we're just buying a gift cert or similar,
+        // then we don't need to make an account
+        $get_username = FALSE;
+        foreach($form_state['build_info']['args'] as $buildarg) {
+          foreach($buildarg->products as $product) {
+            if ($product->type == 'membership_level') {
+              // we're creating an account, so we do need to collect a 
+              // username from an anonymous user
+              $get_username = TRUE;
+              break;
+            }
+          }
+        }
+        if (!$get_username) {
+          $form['panes']['customer']['new_account']['#access'] = FALSE;
+          $form['panes']['customer']['#description'] = t('Enter a valid email address, details of your purchase will be sent to this address.'); 
+        }
+        else {
+          $form['panes']['customer']['#description'] = t('Enter a valid email address for your account. All messages from other members will be forwarded to this address, so be sure to choose an account you check regularly.');
+        }
+      }
       $form['panes']['payment']['details']['#markup'] = t('Click "Review order" below to continue');
       if(isset($form['panes']['payment']['payment_method']['#options']['paypal_wps']))
       {
@@ -300,8 +322,7 @@ function bdw_checkout_pane_rig_agreement($op) {
  ** make panes on checkout page not collapsible
  */
 
-function BDW_custom_changes_checkout_pane_alter(&$panes) {
-
+function BDW_custom_changes_uc_checkout_pane_alter(&$panes) {
   foreach ($panes as &$pane) {
     $pane['collapsible'] = FALSE;
   } 
@@ -479,10 +500,12 @@ function computed_field_field_ba_electric_hookup_compute_compute(&$entity_field,
 {
   $value = 'No';
   $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
-  foreach ($hookups as $hookup) {
-    if ($hookup['value'] === 'Electric Hookup Available') {
-        $value = 'Yes';
-        break;
+  if ($hookups) {
+    foreach ($hookups as $hookup) {
+      if ($hookup['value'] === 'Electric Hookup Available') {
+          $value = 'Yes';
+          break;
+      }
     }
   }
   $entity_field[0]['value'] = $value;
@@ -493,10 +516,12 @@ function computed_field_field_ba_water_hookup_computed_compute(&$entity_field, $
 {
   $value = 'No';
   $hookups = field_get_items($entity_type, $entity, 'field_ba_hookups');
-  foreach ($hookups as $hookup) {
-    if ($hookup['value'] === 'Water Hookup Available') {
-        $value = 'Yes';
-        break;
+  if ($hookups) {
+    foreach ($hookups as $hookup) {
+      if ($hookup['value'] === 'Water Hookup Available') {
+          $value = 'Yes';
+          break;
+      }
     }
   }
   $entity_field[0]['value'] = $value;
@@ -565,5 +590,59 @@ function BDW_custom_changes_mandrill_mailsend_result($result) {
         user_save($user->uid);
       }
     }
+  }
+}
+
+function BDW_custom_changes_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data)
+{
+  if ($result_code != 200)
+  {
+    // remove email from pool
+    module_load_include('inc', 'simplenews', 'includes/simplenews.mail');
+    simplenews_delete_spool(array('mail'=>$to));
+
+    // Check if 5xx return code - if so, permanent error, remove from spool.
+    if ( floor($result_code/100)==5 ) 
+    {
+      // unsubscribe user if mail does not exists
+      $subscriber = simplenews_subscriber_load_by_mail($to);
+      if ($subscriber) {
+        simplenews_subscriber_delete($subscriber);
+      }
+      // disable user
+      $user = user_load_by_mail($to);
+      if ($user)
+      {
+        $user->status = 0;
+        user_save($user->uid);
+      }
+    }
+  }
+}
+
+// Hook cron
+function BDW_custom_changes_cron() {
+  static $role_list = array(2 => 'authenticated user', 25 => 'purchased product');
+  $query = db_select('users_roles', 'ur');
+  $query->fields('ur', array('uid'))
+        ->condition('rid', 25, '='); // rid 25 is purchased product
+  $result = $query->execute();
+
+  while($record = $result->fetchAssoc()) {
+    $account = user_load($record['uid']);
+    if (is_array($account->roles) && !empty(array_diff($account->roles, $role_list))) {
+      // then this user has a valid role as well, flag to remove the
+      // purchased product role and continue
+      $remove_purchased_role[] = $record['uid'];
+      continue;
+    }
+    // otherwise, add user to delete list
+    $delete_users[] = $record['uid'];
+  }
+  if (!empty($remove_purchased_role)) {
+    user_multiple_role_edit($remove_purchased_role, 'remove_role', 25);
+  }
+  if (!empty($delete_users)) {
+    user_delete_multiple($delete_users);
   }
 }
