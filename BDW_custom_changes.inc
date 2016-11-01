@@ -348,7 +348,8 @@ function BDW_echo_group_memberships($data)
 
   global $user;
   if (in_array('full member', array_values($user->roles))) {
-    $display_data = TRUE;
+    //$display_data = TRUE; // temporarily remove until I figure out what's broken
+    $display_data = FALSE;
   }
   else
   {
